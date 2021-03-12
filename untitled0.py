@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Mar 11 12:28:10 2021
+Created on Thu Mar 11 23:37:54 2021
 
-@author: msin2
+@author: sin
 """
 import pandas as pd
 import matplotlib.pyplot as plt
 import yfinance as yf
 import datetime
 
-# get fidelity top rated stock list
 file_name = 'screener_results.xls'
 def fidelity_top_stock(file_name):
     df = pd.read_excel(file_name)
@@ -18,92 +17,48 @@ def fidelity_top_stock(file_name):
     return stock_symbol
 
 def download_raw_data(symbol_name):
-    raw_data = yf.download(tickers = symbol_name, period = '20d', interval = '1d' )
-    # df['birth_date'] = pd.to_datetime(df['birth_date'])
-    return pd.DataFrame(raw_data)
-
-def SMA(list, period):
-    return list.rolling(window=period).mean().iloc[period-1: ]
-
-    
-def add_SMA_column(raw_data, period):
-    raw_data = download_raw_data('LOGI')
-    data_SMA = SMA(raw_data['Adj Close'], period)
-    raw_data['SMA'] =  pd.to_numeric(data_SMA) 
+    raw_data = yf.download(tickers = symbol_name, period = '180d', interval = '1d' )
     return raw_data
 
-# strategy01 moving average cross the price
-# def add_SMA_cross(raw_data): 
-#     sma_position = []
-#     for i in raw_data:
+def add_signal_to(raw_data):
+    
+    def SMA(close_price, period = 9):
+        sma = close_price.rolling(window=period).mean().iloc[period-1: ]
+        return sma.to_frame()
+    
+    sma = SMA(raw_data['Adj Close'], 9)
+    raw_data['SMA'] =  sma
+    raw_data['sma_position'] = ((raw_data['Adj Close'] - raw_data['SMA']) / raw_data['Adj Close']) * 100
+    return raw_data
+
+today = datetime.date.today()
+stock_list = fidelity_top_stock(file_name)
+
+for i in stock_list:
+    df = download_raw_data(i)
+    df = add_signal_to(df)
+    print(i,end = " ")
+    print ( df['sma_position'].tail(1))
         
-#         if raw_data['SMA']  > raw_data['Adj Close']:
-#             sma_position.append['sell']
-#         elif raw_data['SMA']  < raw_data['Adj Close']:
-#             sma_position.append['buy']
-#         else:
-#             sma_position.append['watch']
-#     raw_data['SMA_position'] = sma_position
-#     return raw_data
-         
-df = download_raw_data('LOGI') 
-df = add_SMA_column(df, 9)
-sma_position = []
-# for i in df:
-#     if df['SMA'].isnull():
-#         sma_position.append('null')
-#     else: 
-#         if df['SMA'] < pd.to_numeric(df['Adj Close']):
-#             sma_position.append('buy')
-#         elif df['SMA'] > pd.to_numeric(df['Adj Close']):
-#             sma_position.append('sell')
-#         else:
-#             sma_position.append('watch') 
-
-if (df[-10:]['SMA'] < df[-10:]['Adj Close']):
-    sma_position.append("buy")
+   
+# plot 
+symbol = 'ENVA'
+df = download_raw_data(symbol)
+df = add_signal_to(df)
+plt.figure(figsize = (24,12))
+plt.plot(df['2020':'2021']['Adj Close'], label='Adj Close', linewidth = 2)
+plt.plot(df['2020':'2021']['SMA'], label='9 days rolling SMA', linewidth = 1.5)
+plt.xlabel('Date')
+plt.ylabel('Adjusted closing price ($)')
+plt.title('Simple Moving Average')
+plt.legend()
+plt.show()
 
 
 
 
-    # print(df['SMA'].isnull())  
 
-# today = datetime.date.today()
-# yesterday = today - datetime.timedelta(days = 1)
-# print( raw_data.loc[today:today]['Adj Close']  )
 
-# print(SMA(raw_data['Adj Close'], 9))
-# def plot(close_price):
-#     plt.figure(figsize = (12,6))
-#     plt.plot(close_price, label='Adj Close',lineWidth = 2 )
-#     plt.plot(SMA(close_price, 30), label='SMA', lineWidth = 1.5 )
-#     plt.xlabel('Date')
-#     plt.ylabel('Adjusted closing price ($)')
-#     plt.title('Price with SMA')
-#     plt.legend()
-#     plt.show()
-# plot(raw_data['Adj Close'])
 
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
+
