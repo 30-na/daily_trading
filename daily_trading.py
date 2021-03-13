@@ -34,11 +34,11 @@ def add_signal_to(raw_data):
 today = datetime.date.today()
 stock_list = fidelity_top_stock(file_name)
 
-# for i in stock_list:
-#     df = download_raw_data(i)
-#     df = add_signal_to(df)
-#     print(i,end = " ")
-#     print ( df['sma_position'].tail(1))
+for i in stock_list:
+    df = download_raw_data(i)
+    df = add_signal_to(df)
+    print(i,end = " ")
+    print ( df['sma_position'].tail(1))
         
    
 # plot 
